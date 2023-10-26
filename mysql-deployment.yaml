@@ -1,0 +1,178 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-deployment
+  labels:
+    app: mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:5.7
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: root
+              #valueFrom:
+               # secretKeyRef:
+                #  name: mysql-secrets
+                 # key: ROOT_PASSWORD
+          volumeMounts:
+            - name: mysql-initdb
+              mountPath: /docker-entrypoint-initdb.d
+            - mountPath: "/var/lib/mysql"
+              subPath: "mysql"
+              name: mysql-data
+      volumes:
+        - name: mysql-initdb
+          configMap:
+            name: mysql-initdb-config
+        - name: mysql-data
+          persistentVolumeClaim:
+            claimName: mysql-data-disk
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-initdb-config
+data:
+  init.sql: |
+    CREATE DATABASE e_commerce ;
+    use e_commerce;
+
+    CREATE TABLE avis (
+      idavi int(11) NOT NULL,
+      note int(11) NOT NULL,
+      iduser varchar(255) NOT NULL,
+      idproduit varchar(255) NOT NULL
+    );
+
+    INSERT INTO `avis` (`idavi`, `note`, `iduser`, `idproduit`) VALUES
+    (1, 3, '3', '18'),
+    (2, 2, '3', '13'),
+    (3, 4, '3', '15'),
+    (4, 3, '2', '2'),
+    (5, 5, '2', '13');
+
+    CREATE TABLE commande (
+      idc int(11) NOT NULL,
+      qt_produit int(11) NOT NULL,
+      date date NOT NULL,
+      num_facture varchar(255) NOT NULL,
+      adrss_liv varchar(255) NOT NULL,
+      idproduit varchar(255) NOT NULL,
+      iduser varchar(255) NOT NULL
+    );
+
+    INSERT INTO `commande` (`idc`, `qt_produit`, `date`, `num_facture`, `adrss_liv`, `idproduit`, `iduser`) VALUES
+    (1, 2, '2023-09-29', 'PAYID-MULRAJY1FC77083GB730783S', 'lot B1 N05 Mahitsy Ambodriatrimo Antananarivo Madagascar', '1', '2'),
+    (2, 1, '2023-09-29', 'PAYID-MULRAJY1FC77083GB730783S', 'lot B1 N05 Mahitsy Ambodriatrimo Antananarivo Madagascar', '2', '2'),
+    (3, 1, '2023-09-29', 'PAYID-MULRAJY1FC77083GB730783S', 'lot B1 N05 Mahitsy Ambodriatrimo Antananarivo Madagascar', '11', '2'),
+    (4, 1, '2023-09-29', 'PAYID-MULRAJY1FC77083GB730783S', 'lot B1 N05 Mahitsy Ambodriatrimo Antananarivo Madagascar', '6', '2'),
+    (5, 1, '2023-09-29', 'PAYID-MULRAJY1FC77083GB730783S', 'lot B1 N05 Mahitsy Ambodriatrimo Antananarivo Madagascar', '8', '2'),
+    (6, 3, '2023-09-29', 'PAYID-MULRAJY1FC77083GB730783S', 'lot B1 N05 Mahitsy Ambodriatrimo Antananarivo Madagascar', '3', '2'),
+    (7, 1, '2023-09-29', 'PAYID-MULRBFA380787940G496294K', 'lot B1 N05 Mahitsy Ambodriatrimo Antananarivo Madagascar', '9', '2'),
+    (8, 1, '2023-09-29', 'PAYID-MULREZI36V14827JM077261D', 'Residence des ingenieurs  Tanambao Fianarantsoa Madagascar', '9', '3'),
+    (9, 1, '2023-09-29', 'PAYID-MULREZI36V14827JM077261D', 'Residence des ingenieurs  Tanambao Fianarantsoa Madagascar', '18', '3'),
+    (10, 1, '2023-09-29', 'PAYID-MULREZI36V14827JM077261D', 'Residence des ingenieurs  Tanambao Fianarantsoa Madagascar', '13', '3'),
+    (11, 1, '2023-09-29', 'PAYID-MULREZI36V14827JM077261D', 'Residence des ingenieurs  Tanambao Fianarantsoa Madagascar', '15', '3'),
+    (12, 1, '2023-09-29', 'PAYID-MULRGQA9Y373506HJ323662S', ' lot B1 N05 Mahitsy Ambodriatrimo Antananarivo Madagascar', '13', '2'),
+    (13, 1, '2023-09-29', 'PAYID-MULRJJQ5V211981BM378360N', 'Residence des ingenieurs Tanambao Fianarantsoa Madagascar', '5', '3');
+
+    CREATE TABLE product (
+      idproduit int(11) NOT NULL,
+      qt int(11) NOT NULL,
+      design varchar(255) NOT NULL,
+      description varchar(500) NOT NULL,
+      categorie varchar(255) NOT NULL,
+      promo int(11) NOT NULL,
+      prix int(11) NOT NULL,
+      image_path varchar(255) NOT NULL,
+      corbeille tinyint(1) NOT NULL DEFAULT 0
+    );
+
+    INSERT INTO `product` (`idproduit`, `qt`, `design`, `description`, `categorie`, `promo`, `prix`, `image_path`, `corbeille`) VALUES
+    (1, 13, 'Arsenal FC', 'Ballon Arsenal FC ,Fussball Taille 6\r\nGarantie 5 mois Provenant d\'allemegne', 'Sports et loisirs', 0, 200, 'uploads\\Arsenal FC,Fussball.png', 1),
+    (2, 9, 'Azurée ', 'Estée Lauder France \r\nparfum pour femme , durable 2 jours', 'Vêtements', 10, 20, 'uploads\\Azurée _ Estée Lauder France.png', 1),
+    (3, 17, 'Bola ', 'Penalty de Rugby IX - Branco e Azul  ', 'Sports et loisirs', 0, 30, 'uploads\\Bola Penalty de Rugby IX - Branco e Azul.jpg', 1),
+    (4, 70, 'Camisa', 'Camisa _ Camiseta do Guarani Bugre_Bugrino de Quebrada\r\nTaille disponible:  M,XM,L,XL', 'Sports et loisirs', 50, 5, 'uploads\\Camisa _ Camiseta do Guarani Bugre_Bugrino de Quebrada - EG.jpg', 0),
+    (5, 0, 'Montre se5', 'Montre Ancienne provenant de Rome,en tres bonne qualité', 'Vêtements', 0, 1200, 'uploads\\CHPO, Armbanduhr, Rawiya, Braun, (Analoguhr, 38 mm).png', 1),
+    (6, 11, 'Christian Louboutin ', 'Christian Louboutin Pigalle Follies Christian, venant de france par le celebre marque MyParf\r\nPointure displonible:36,37,38,40\r\n', 'Vêtements', 0, 100, 'uploads\\Christian Louboutin Pigalle Follies Christian Louboutin Pigalle 100.jpg', 1),
+    (7, 6, 'Eetkamerstoel', 'Clp McCoy V2 Eetkamerstoel - Kunstleer - Creme kleur onderstel _ Grijs\r\ndisponible en bleu,jaune et rouge', 'Maison et jardin', 5, 50, 'uploads\\Clp McCoy V2 Eetkamerstoel - Kunstleer - Creme kleur onderstel _ Grijs.jpg', 1),
+    (8, 7, 'Nashi', ' Cologne Nashi Blossom provenant de France durable pendant 24h', 'Vêtements', 0, 20, 'uploads\\Cologne Nashi Blossom _ France E-commerce Site - French.png', 1),
+    (9, 76, 'Dolce E Gabbana', 'Dolce E Gabbana Women\'s Pink Leather Handbag - One Size _ Pink \r\nCouleur disponible:Rouge,vers,blanc', 'Vêtements', 20, 100, 'uploads\\Dolce E Gabbana Women\'s Pink Leather Handbag - One Size _ Pink.jpg', 1),
+    (10, 30, 'Iphone 13', 'Ram:12Go\r\nStockage:128Go\r\ntaille:7\"', 'Électronique et high-tech', 10, 1000, 'uploads\\Phone 13 Mockup This mockup is perfect for showing your designs, especially UI _ UX desi.jpg', 1),
+    (11, 11, 'Velotrikot', 'XLC, Velotrikot, JE-S17 ', 'Sports et loisirs', 12, 40, 'uploads\\download (16).jpg', 1),
+    (12, 5, 'Zago', 'Zago, Couchtisch, Bloom (100 x 50 x 40 cm, 70 x 50 x 35 cm)', 'Maison et jardin', 0, 35, 'uploads\\GOPLUS Lot de 2 Jardinière Surélevée en Bois,Lit d.jpg', 1),
+    (13, 45, 'Lunnette 2D', 'Disponible aussi en couleur rouge,blanc et noir', 'Vêtements', 0, 13, 'uploads\\Óculos Quadrado Polarizado Com Brinde Selten Azul Com Vermelho.jpg', 1),
+    (14, 13, 'Rouge a levre', 'Cosmetics _ Maquiagens e Produit de Beleza', 'Vêtements', 0, 12, 'uploads\\Homepage _ MAC Cosmetics _ Maquiagens e Produtos de Beleza – Site Oficial.png', 0),
+    (15, 12, 'Robe noir', 'iLover Classy Vintage Audrey Hepburn Style 1950\'s Rockabilly Swing Evening Dress', 'Vêtements', 10, 1000, 'uploads\\iLover Classy Vintage Audrey Hepburn Style 1950\'s Rockabilly Swing Evening Dress.jpg', 1),
+    (16, 1, 'iMac 24', 'Taille: 15\"\" , Couleur disponible:\'Noir,blanc,rouge', 'Électronique et high-tech', 0, 1600, 'uploads\\iMac 24-inch Mockups - Mockups.png', 1),
+    (17, 60, 'boite de fleur', 'Disponible pour les 5 couleur , rayon 10cm desous et 20cm dessus', 'Maison et jardin', 10, 20, 'uploads\\Gasteria_Haworthia mix in gekleurde plasticpot _ 5 stuks _ Ø 6 cm _  11-16 cm.jpg', 1),
+    (18, 10, 'Bicyclette', 'Couleur disponible:Noir,Rouge,bleu', 'Sports et loisirs', 0, 100, 'uploads\\Volare Kinderfiets Dynamic - 20 inch - Mat Zwart - 7 Versnellingen - Met fietshelm & ac___.jpg', 1);
+
+    CREATE TABLE user (
+      iduser int(11) NOT NULL,
+      username varchar(255) NOT NULL,
+      password varchar(255) NOT NULL,
+      email varchar(255) NOT NULL
+    ); 
+
+
+    INSERT INTO `user` (`iduser`, `username`, `password`, `email`) VALUES
+    (1, 'admin', 'sha256$YqjMwz2krOLRNdmd$54922e4d0e650036b89d31ef3601e7e4672eb5915d838e504083a9ef8854f18a', 'williamjamesmoriart@gmail.com'),
+    (2, 'd\'Arbi', 'pbkdf2:sha256:600000$uGwh9CkKVdnqTj17$1f219a919fb6e6bc00c0cea1db3b525d4a5b340c0d65f7dce0b654b297495eca', 'rehozoedarbi@gmail.com'),
+    (3, 'kevin', 'sha256$J2YNS0isx9L3zuVq$df345648c4c61a38f6ca530b8048eda07851e5c40347a15e768c7b4508313de5', 'maotykevin@gmail.com');
+
+    ALTER TABLE avis
+      ADD PRIMARY KEY (idavi);
+
+    ALTER TABLE commande
+      ADD PRIMARY KEY (idc);
+
+
+
+    ALTER TABLE product
+      ADD PRIMARY KEY (idproduit);
+
+
+    ALTER TABLE user
+      ADD PRIMARY KEY (iduser);
+
+    ALTER TABLE avis
+      MODIFY idavi int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+
+    ALTER TABLE commande
+      MODIFY idc int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+
+
+
+    ALTER TABLE product
+      MODIFY idproduit int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+
+
+    ALTER TABLE user
+      MODIFY iduser int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-data-disk
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
