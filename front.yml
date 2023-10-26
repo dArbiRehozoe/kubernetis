@@ -24,7 +24,7 @@ spec:
       containers:
         - name: react-app
           image: darbi/stage_front:latest   # Mettez à jour l'image Docker
-          imagePullPolicy: Never  # Vous pouvez également mettre à jour la politique de récupération
+          imagePullPolicy: Always  # Vous pouvez également mettre à jour la politique de récupération
           env:
           - name: REACT_APP_API_URL
             valueFrom:

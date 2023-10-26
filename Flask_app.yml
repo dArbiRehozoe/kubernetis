@@ -15,7 +15,7 @@ spec:
       containers:
         - name: flask-app
           image: darbi/stage_app:latest # Replace with your actual Flask app image
-          imagePullPolicy: Never 
+          imagePullPolicy: Always
           # image: nginx
           env:
             - name: SQLALCHEMY_DATABASE_URI
